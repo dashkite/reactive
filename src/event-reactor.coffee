@@ -21,9 +21,10 @@ class EventReactor
   
   resolve: ( name ) ->
     @run()      
+    self = @
     new Promise ( resolve, reject ) ->
       self.handlers[ name ] = resolve
-      self.handlers.failure ?= reject
+      self.handlers.failure ?= ({ error }) -> reject error
     
   [ Symbol.asyncIterator ]: -> @reactor
 
