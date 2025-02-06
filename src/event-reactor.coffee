@@ -4,6 +4,11 @@
 
 # TODO make run a generic so that it can take a gen fn
 
+run = ( handlers, event ) ->
+  if handlers?
+    for handler in handlers
+      handler.apply null, [ event ]
+
 class EventReactor
   
   @from: ( reactor ) -> 
@@ -11,20 +16,25 @@ class EventReactor
       { reactor, handlers: {} }
   
   when: ( name, handler ) -> 
-    @handlers[ name ] = handler
+    ( @handlers[ name ] ?= []).push handler
+    @
+
+  each: ( handler ) ->
+    ( @handlers._ ?= [] ).push handler
     @
     
   run: ->
     for await event from @reactor
-      @handlers[ event.name ]?.apply null, [ event ]
+      run @handlers[ event.name ], event
+      run @handlers._, event
     undefined
   
   resolve: ( name ) ->
     @run()      
     self = @
     new Promise ( resolve, reject ) ->
-      self.handlers[ name ] = resolve
-      self.handlers.failure ?= ({ error }) -> reject error
+      self.when name, resolve
+      self.when "failure", ({ error }) -> reject error
     
   [ Symbol.asyncIterator ]: -> @reactor
 
