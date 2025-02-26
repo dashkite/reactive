@@ -7,6 +7,10 @@ settings:
 importers:
 
   .:
+    dependencies:
+      '@dashkite/joy':
+        specifier: link:../joy
+        version: link:../joy
     devDependencies:
       '@dashkite/amen':
         specifier: ^0.2.0
@@ -26,6 +30,9 @@ importers:
       '@dashkite/genie-coffee':
         specifier: link:../genie-coffee
         version: link:../genie-coffee
+      '@dashkite/genie-module':
+        specifier: link:../genie-module
+        version: link:../genie-module
 
 packages:
 
