@@ -1,7 +1,10 @@
 import { Queue } from "@dashkite/joy/iterable"
 
 # TODO this might belong in Reactive
+
 class Channel
+
+  @close: Symbol "close"
 
   @make: ->
     Object.assign ( new @ ),
@@ -20,12 +23,16 @@ class Channel
     else
       @queue.dequeue()
 
-  close: -> @closed = true
+  close: -> @send Channel.close
       
   apply: ->
-    # TODO what if there are messages still in the queue?
-    yield await @receive() until @closed
-    undefined # don't return comprehension
+    until @closed
+      message = await @receive()
+      if message == Channel.close
+        @closed = true
+      else
+        yield message
+    return # don't return comprehension
             
   [ Symbol.asyncIterator ]: -> @apply()
 
