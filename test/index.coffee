@@ -56,7 +56,8 @@ do ->
         topic.publish "foo"
         topic.unsubscribe subscriptions.a
         topic.publish "bar"
-        topic.unsubscribe subscriptions.b
+
+        topic.close()
         
         assert await closed.a
         assert await closed.b
