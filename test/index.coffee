@@ -3,6 +3,7 @@ import {test, success} from "@dashkite/amen"
 import print from "@dashkite/amen-console"
 
 import Channel from "../src/channel"
+import Topic from "../src/topic"
 
 do ->
 
@@ -28,6 +29,43 @@ do ->
           { value: "foo" }
           { value: "bar" }
         ]
+    ]
+
+    test "Topic", [
+
+      
+      test "basic scenario", ->
+
+        topic = Topic.make()
+        log = []
+
+        subscriptions =
+          a: topic.subscribe()
+          b: topic.subscribe()
+
+        closed =
+          a: new Promise ( resolve ) ->
+            for await value from subscriptions.a
+              log.push a: value
+            resolve true
+          b: new Promise ( resolve ) ->
+            for await value from subscriptions.b
+              log.push b: value
+            resolve true
+
+        topic.publish "foo"
+        topic.unsubscribe subscriptions.a
+        topic.publish "bar"
+        topic.unsubscribe subscriptions.b
+        
+        assert await closed.a
+        assert await closed.b
+        assert.deepEqual log, [
+          { a: "foo" }
+          { b: "foo" }
+          { b: "bar" }
+        ]
+
     ]
 
   ]
