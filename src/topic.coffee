@@ -13,9 +13,10 @@ class Topic
     else
       # we prune here just in case
       # but it's best to call unsubscribe
-      @prune()
-      for subscriber in @subscribers
-        subscriber.send message
+      @subscribers =
+        for channel in @subscribers when !( channel.closed )
+          channel.send message
+          channel
       return @
   
   subscribe: ->
