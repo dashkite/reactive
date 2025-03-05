@@ -46,6 +46,6 @@
     "@dashkite/genie-release": "link:../genie-release"
   },
   "dependencies": {
-    "@dashkite/joy": "link:../joy"
+    "@dashkite/joy": "^0.4.0"
   }
 }

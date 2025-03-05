@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@dashkite/joy':
-        specifier: link:../joy
-        version: link:../joy
+        specifier: ^0.4.0
+        version: 0.4.0
     devDependencies:
       '@dashkite/amen':
         specifier: ^0.2.0
@@ -51,6 +51,9 @@ packages:
   '@dashkite/joy@0.3.16':
     resolution: {integrity: sha512-dsU0us4j1Pb+zceoBvLbnZ2PbmULkJUtM2vtWLxKmoc1DE4w9SVTiPTe6JWvF0A0vk90ldv+Lc9qEA5x3O+DtQ==}
 
+  '@dashkite/joy@0.4.0':
+    resolution: {integrity: sha512-pBeuzpzuUzb3I/HNykRQXN3nh8t2JgtmEwScCtQuSU/q3/LODdu4Xd522m7oHVwFXNPZ2CUwJk/MNg+etaX3rQ==}
+
   ansi-styles@4.3.0:
     resolution: {integrity: sha512-zbB9rCJAT1rbjiVDb2hqKFHNYLxgtk8NURxZ3IZwD3F6NtxbXZQCnnSi1Lkx+IDohdPlFp222wVALIheZJQSEg==}
     engines: {node: '>=8'}
@@ -87,6 +90,8 @@ snapshots:
       '@dashkite/joy': 0.3.16
 
   '@dashkite/joy@0.3.16': {}
+
+  '@dashkite/joy@0.4.0': {}
 
   ansi-styles@4.3.0:
     dependencies:
