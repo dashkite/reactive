@@ -2,10 +2,11 @@ import Channel from "./channel"
 
 class Topic
 
-  @make: ->
-    Object.assign ( new @ ),
-      subscribers: []
-      closed: false
+  @make: -> new @
+
+  constructor: ->
+    @subscribers = []
+    @closed = false
       
   publish: ( message ) ->
     if @closed
