@@ -25,7 +25,7 @@ class Channel
 
   close: -> @send Channel.close
       
-  run: ->
+  listen: ->
     until @closed
       message = await @receive()
       if message == Channel.close
@@ -34,7 +34,7 @@ class Channel
         yield message
     return # don't return comprehension
             
-  [ Symbol.asyncIterator ]: -> @run()
+  [ Symbol.asyncIterator ]: -> @listen()
 
 
 export default Channel
