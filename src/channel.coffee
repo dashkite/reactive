@@ -10,6 +10,9 @@ class Channel
     Object.assign ( new @ ),
       closed: false
       queue: Queue.make()
+
+  source: ( channel ) ->
+    ( @send message ) for await message from channel
       
   send: ( message ) ->
     if @closed
