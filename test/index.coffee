@@ -4,6 +4,8 @@ import print from "@dashkite/amen-console"
 
 import Channel from "../src/channel"
 import Topic from "../src/topic"
+import match from "../src/event-selector"
+import EventReactor from "../src/event-reactor"
 
 do ->
 
@@ -66,6 +68,61 @@ do ->
           { b: "foo" }
           { b: "bar" }
         ]
+
+    ]
+
+    test "Event Reactor", [
+
+      test "selector", [
+
+        test "match", ->
+
+          event =
+            name: "value"
+            scope: "component"
+            url: "https://dashkite.com"
+
+          assert match "*.value", event
+          assert match "component.value", event
+          assert ! match "controller.value", event
+          assert match "value", event
+          assert match "value[url]", event
+          assert ! match "value[foo]", event
+          assert match "*.value[url]", event
+          assert match "component.value[url]", event
+          assert ! match "controller.value[url]", event
+          assert match "*", event        
+          assert match "value, foo", event        
+          assert match "foo, value", event        
+          assert ! match "foo, bar", event        
+
+      ]
+
+      test "basic reactor", [
+
+        test "sync", ->
+
+          reactor = EventReactor.make do ->
+              for x in [ 1..5 ]
+                yield name: "number", value: x
+            
+            .when "number", ( event ) ->
+              yield event.value
+
+          result = ( x for await x from reactor )
+          assert.deepEqual [ 1..5 ], result
+
+        test "async", ->
+          reactor = EventReactor.make do ->
+              for x in [ 1..5 ]
+                yield name: "number", value: await x
+            
+            .when "number", ( event ) ->
+              yield event.value
+
+          result = ( x for await x from reactor )
+          assert.deepEqual [ 1..5 ], result
+      ]
 
     ]
 
