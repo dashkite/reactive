@@ -1,8 +1,9 @@
+import * as Type from "@dashkite/joy/type"
 import match from "./event-selector"
 
-iterable = ( value ) ->
-  ( value?[Symbol.asyncIterator]? ) || 
-    ( value?[Symbol.iterator]? )
+isGeneratorFunction = ( f ) ->
+  ( Type.isGeneratorFunction f ) ||
+    ( Type.isReactorFunction f )
 
 class EventReactor
 
@@ -34,8 +35,11 @@ class EventReactor
   [ Symbol.asyncIterator ]: ->
     for await event from @reactor
       for { selector, handler } in @handlers when match selector, event
-        result = handler.call @self, event
-        yield from result if ( iterable result )        
+        if isGeneratorFunction handler
+          result = handler.call @self, event
+          yield from result
+        else
+          handler.call @self, event
     return
 
 export default EventReactor

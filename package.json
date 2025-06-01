@@ -47,6 +47,6 @@
     "@dashkite/vista": "link:../vista"
   },
   "dependencies": {
-    "@dashkite/joy": "^0.4.0"
+    "@dashkite/joy": "link:../joy"
   }
 }
