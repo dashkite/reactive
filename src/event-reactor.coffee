@@ -10,6 +10,8 @@ class EventReactor
   @make: ( reactor ) ->
     Object.assign ( new @ ), { reactor, handlers: []}
 
+  @run: ( reactor ) -> ( @make reactor ).run()
+
   bind: ( @self ) -> @
 
   when: ( selector, handler ) ->

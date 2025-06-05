@@ -81,6 +81,7 @@ do ->
             name: "value"
             scope: "component"
             url: "https://dashkite.com"
+            value: 42
 
           assert match "*.value", event
           assert match "component.value", event
@@ -89,12 +90,19 @@ do ->
           assert match "value[url]", event
           assert ! match "value[foo]", event
           assert match "*.value[url]", event
+          assert match "*.value[url='https://dashkite.com']", event
+          assert ! match "*.value[url='https://acme.org']", event
+          assert match '*.value[url="https://dashkite.com"]', event
           assert match "component.value[url]", event
           assert ! match "controller.value[url]", event
+          assert match "value[value='42']", event
           assert match "*", event        
           assert match "value, foo", event        
           assert match "foo, value", event        
-          assert ! match "foo, bar", event        
+          assert ! match "foo, bar", event    
+          assert ! match "!value", event
+          assert match "!foo", event
+          assert ! match "foo, !value", event    
 
       ]
 

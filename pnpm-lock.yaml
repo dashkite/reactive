@@ -11,6 +11,9 @@ importers:
       '@dashkite/joy':
         specifier: link:../joy
         version: link:../joy
+      '@dashkite/parse':
+        specifier: link:../parse
+        version: link:../parse
     devDependencies:
       '@dashkite/amen':
         specifier: ^0.2.0
