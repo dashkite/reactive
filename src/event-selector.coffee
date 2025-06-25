@@ -1,7 +1,6 @@
 import * as Fn from "@dashkite/joy/function"
 import * as Parse from "@dashkite/parse"
 
-
 ws = ( rule ) -> Parse.pipe [
   Parse.all [
     Parse.skip Parse.optional Parse.ws
@@ -11,13 +10,13 @@ ws = ( rule ) -> Parse.pipe [
 ]
 
 comma = ws Parse.text ","
-
 period = Parse.skip Parse.text "."
-
 asterisk = Parse.text "*"
 lbracket = Parse.text "["
 rbracket = Parse.text "]"
 equals = Parse.text "="
+
+symbol = ws Parse.re /^[a-zA-Z][\w\-]*/
 
 quoted = Parse.pipe [
   Parse.re /^'[^']*'|"[^"]*"/
@@ -25,17 +24,17 @@ quoted = Parse.pipe [
 ]
 
 name = Parse.pipe [
-  ws Parse.re /[a-zA-Z][a-zA-Z0-9\-_]+/
+  symbol
   Parse.tag "name"
 ]
 
 scope = Parse.pipe [
-  ws Parse.re /[a-zA-Z][a-zA-Z0-9\-_]+/
+  symbol
   Parse.tag "scope"
 ]
 
 property = Parse.pipe [
-  ws Parse.re /[a-zA-Z][a-zA-Z0-9\-_]+/
+  symbol
   Parse.tag "property"
 ]
 
@@ -104,6 +103,10 @@ selector = Parse.pipe [
     Parse.optional propertySelector
   ]
   Parse.merge
+  Parse.map ({ rest..., name, scope }) ->
+    name ?= "*"
+    scope ?= "*"
+    { rest..., name, scope }
 ]
 
 $not = Parse.pipe [
@@ -136,6 +139,9 @@ unaryExpression = Parse.pipe [
     selector
   ]
   Parse.merge
+  Parse.map ({ rest..., negate }) ->
+    negate ?= false
+    { rest..., negate }
 ]
 
 binaryExpression = Parse.pipe [
@@ -155,38 +161,31 @@ expression = Parse.any [
 
 parse = Fn.memoize Parse.parser Parse.list comma, expression
 
-$eval = ( tree ) ->
+evaluate = ( tree ) ->
   if Array.isArray tree
     ( event ) ->
       tree.some ( expression ) ->
-        (( $eval expression ) event )
+        (( evaluate expression ) event )
   else
     if tree.operator
-      first = $eval tree.first
-      second = $eval tree.second
+      f = evaluate tree.first
+      g = evaluate tree.second
       switch tree.operator
         when "or"
-          ( event ) ->
-            ( first event ) || ( second event )
+          ( event ) -> ( f event ) || ( g event )
         when "and"
-          ( event ) ->
-            ( first event ) && ( second event )
+          ( event ) -> ( f event ) && ( g event )
     else
       { scope, name, property, value, negate } = tree
-      scope ?= "*"
-      name ?= "*"
-      negate ?= false
-      property ?= "*"
-      value ?= "*"
       do ( scope, name, property, value, negate ) ->
         ( event ) ->
           result = (( scope == "*" ) || ( scope == event.scope )) &&
             (( name == "*") || ( name == event.name )) &&
-            (( property == "*" ) || event[ property ]? ) &&
-            (( value == "*" ) || event[ property ]?.toString() == value )
+            (( !property? ) || event[ property ]? ) &&
+            (( !value? ) || ( event[ property ]?.toString() == value ))
           if negate then !result else result
 
 match = Fn.curry ( pattern, event ) ->
-  (( $eval parse pattern ) event )
+  (( evaluate parse pattern ) event )
 
 export default match
