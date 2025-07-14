@@ -12,8 +12,8 @@ importers:
         specifier: link:../joy
         version: link:../joy
       '@dashkite/parse':
-        specifier: link:../parse
-        version: link:../parse
+        specifier: 0.5.0
+        version: 0.5.0
     devDependencies:
       '@dashkite/amen':
         specifier: ^0.2.0
@@ -623,6 +623,9 @@ packages:
 
   '@dashkite/masonry@0.13.0':
     resolution: {integrity: sha512-qGP0Ortn8tzBTY9BRv965V5IIhJCmsNMTjLq0X7Pk80lBgNROc+tV/5BXjziBZ9CG7fcJ5h3ZvCsl1f6byfsFQ==}
+
+  '@dashkite/parse@0.5.0':
+    resolution: {integrity: sha512-werLa650mYvKyNQOOA4kGxmwBTyLXbN+swZeGbVbXyjH+1XMNmnBDUreLPr3J3PYyeU1xH2Nu7qdjXxSjWNw+g==}
 
   '@dashkite/zephyr@0.2.0':
     resolution: {integrity: sha512-l3Fm9nyOIp1yBnv4IzGOKVgo1/UucU5WLvsqAfcP2jEVlE4AgpPkODssyloxTyC3N+bhcz1DXqC/7KokI1eVjA==}
@@ -2162,6 +2165,10 @@ snapshots:
       fast-glob: 3.3.3
     transitivePeerDependencies:
       - supports-color
+
+  '@dashkite/parse@0.5.0':
+    dependencies:
+      '@dashkite/joy': 0.3.16
 
   '@dashkite/zephyr@0.2.0':
     dependencies:
