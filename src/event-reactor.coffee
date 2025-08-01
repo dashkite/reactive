@@ -18,6 +18,8 @@ class EventReactor
     @handlers.push { selector, handler }
     @
 
+  catch: ( @_catch ) ->
+
   forward: ( selector ) -> 
     @when selector, ( event ) -> yield event
 
@@ -34,14 +36,23 @@ class EventReactor
         continue
     return  
 
-  [ Symbol.asyncIterator ]: ->
+  start: ->
     for await event from @reactor
       for { selector, handler } in @handlers when match selector, event
-        if isGeneratorFunction handler
-          result = handler.call @self, event
-          yield from result
-        else
-          handler.call @self, event
+        try
+          if isGeneratorFunction handler
+            result = handler.call @self, event
+            yield from result
+          else
+            handler.call @self, event
+        catch error 
+          if @_catch?
+            @_catch error
+          else
+            throw error
     return
+
+  [ Symbol.asyncIterator ]: -> @start()
+
 
 export default EventReactor
