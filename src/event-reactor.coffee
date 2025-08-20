@@ -42,9 +42,9 @@ class EventReactor
         try
           if isGeneratorFunction handler
             result = handler.call @self, event
-            yield from result
+            await yield from result
           else
-            handler.call @self, event
+            await handler.call @self, event
         catch error 
           if @_catch?
             @_catch error

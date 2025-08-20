@@ -121,6 +121,7 @@ do ->
           assert.deepEqual [ 1..5 ], result
 
         test "async", ->
+
           reactor = EventReactor.make do ->
               for x in [ 1..5 ]
                 yield name: "number", value: await x
