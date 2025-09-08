@@ -2,14 +2,52 @@ import assert from "@dashkite/assert"
 import {test, success} from "@dashkite/amen"
 import print from "@dashkite/amen-console"
 
+import Coroutine from "../src/coroutine"
 import Channel from "../src/channel"
 import Topic from "../src/topic"
 import match from "../src/event-selector"
 import EventReactor from "../src/event-reactor"
+import EventCoroutine from "../src/event-coroutine"
 
 do ->
 
   print await test "Reactive", [
+
+    test "Coroutine", [
+
+      test "iterator", ->
+
+        multiplier = ( m ) ->
+          x = 1
+          loop
+            m = yield x *= m
+            break if m == 0
+          return x
+
+        co = Coroutine.make multiplier 2
+        assert.equal 2, co.resume()
+        assert.equal 6, co.resume 3
+        assert.equal 24, co.resume 4
+        assert.equal 24, co.resume 0
+        assert.throws -> co.resume()
+
+      test "reactor", ->
+
+        multiplier = ( m ) ->
+          x = 1
+          loop
+            m = ( yield await ( x *= m ))
+            break if m == 0
+          return x
+
+        co = Coroutine.make multiplier 2
+        assert.equal 2, await co.resume()
+        assert.equal 6, await co.resume 3
+        assert.equal 24, await co.resume 4
+        assert.equal 24, await co.resume 0
+        assert.rejects -> co.resume()
+
+    ]
 
     test "Channel", [
 
@@ -131,6 +169,115 @@ do ->
 
           result = ( x for await x from reactor )
           assert.deepEqual [ 1..5 ], result
+      ]
+
+    ]
+
+    test "Event Coroutine", [
+
+      test "one ping only", [
+
+        test "synchronous", ->
+
+          source = ->
+            yield name: "A", value: 1
+            yield name: "B", value: 2
+            yield name: "C", value: 3
+
+          results = []
+          ( co = EventCoroutine.make source )
+            .when "A", ({ value }) -> results.push value
+            .when "B", ({ value }) -> results.push value
+            .when "C", ({ value }) -> results.push value
+            .start()
+
+          assert.deepEqual [ 1, 2, 3 ], results
+
+        test "asynchronous", ->
+
+          source = ->
+            yield await name: "A", value: 1
+            yield await name: "B", value: 2
+            yield await name: "C", value: 3
+
+          results = []
+          await do ->
+            ( co = EventCoroutine.make source )
+              .when "A", ({ value }) -> results.push value
+              .when "B", ({ value }) -> results.push value
+              .when "C", ({ value }) -> results.push value
+              .start()
+
+          assert.deepEqual [ 1, 2, 3 ], results
+
+      ]
+
+      test "ping-pong", [
+
+        test "synchronous", ->
+
+          reactor = ->
+            value = yield name: "A", value: 1
+            value = yield { name: "B", value }
+            yield { name: "C", value }
+
+          result = do ->
+            ( co = EventCoroutine.make reactor )
+              .when "A", ({ value }) -> ++value
+              .when "B", ({ value }) -> ++value
+              .when "C", ({ value }) -> ++value
+              .start()
+
+          assert.equal 4, result
+
+        test "asynchronous", ->
+
+          reactor = ->
+            value = yield await name: "A", value: 1
+            value = yield await { name: "B", value }
+            yield await { name: "C", value }
+
+          result = await do ->
+            ( co = EventCoroutine.make reactor )
+              .when "A", ({ value }) -> ++value
+              .when "B", ({ value }) -> ++value
+              .when "C", ({ value }) -> ++value
+              .start()
+
+          assert.equal 4, result
+
+        test "iterator", ->
+
+          reactor = ->
+            value = yield name: "A", value: 1
+            value = yield { name: "B", value }
+            yield { name: "C", value }
+
+          result = do ->
+            ( co = EventCoroutine.make reactor )
+              .when "A", ({ value }) -> yield return ++value
+              .when "B", ({ value }) -> yield return ++value
+              .when "C", ({ value }) -> yield return ++value
+              .start()
+
+          assert.equal 4, result
+
+        test "reactor", ->
+
+          reactor = ->
+            value = yield name: "A", value: 1
+            value = yield { name: "B", value }
+            yield { name: "C", value }
+
+          result = await do ->
+            ( co = EventCoroutine.make reactor )
+              .when "A", ({ value }) -> yield return await ++value
+              .when "B", ({ value }) -> yield return await ++value
+              .when "C", ({ value }) -> yield return await ++value
+              .start()
+
+          assert.equal 4, result
+
       ]
 
     ]
