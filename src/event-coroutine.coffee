@@ -1,29 +1,7 @@
 import Generic from "@dashkite/generic"
-import * as Type from "@dashkite/joy/type"
 import { Queue, reduce } from "@dashkite/joy/iterable"
 import Coroutine from "./coroutine"
 import match from "./event-selector"
-
-last = reduce (( ax, x ) -> x), undefined
-
-isEvent = ( value ) -> value?.name?
-
-run = ( self, value ) ->
-  # console.log { value }
-  if self.co.done == true
-    value
-  else
-    event = self.co.resume value
-    if ( result = handle self, event )?.then?
-      result.then ( value ) -> run self, value
-    else if result?[ Symbol.iterator ]?
-      last do -> 
-        yield run self, yield from result
-    else if result?[ Symbol.asyncIterator ]?
-      last do ->
-        yield run self, yield from result
-        await return
-    else run self, result
 
 class EventCoroutine
 
@@ -48,6 +26,26 @@ class EventCoroutine
 
   start: -> run @
 
+last = reduce (( ax, x ) -> x), undefined
+
+isEvent = ( value ) -> value?.name?
+
+run = ( self, value ) ->
+  if self.co.done == true
+    value
+  else
+    event = self.co.resume value
+    if ( result = handle self, event )?.then?
+      result.then ( value ) -> run self, value
+    else if result?[ Symbol.iterator ]?
+      last do -> 
+        yield run self, yield from result
+    else if result?[ Symbol.asyncIterator ]?
+      last do ->
+        yield run self, yield from result
+        await return
+    else run self, result
+
 handle = do ->
 
   ( Generic.make "handle" )
@@ -60,7 +58,7 @@ handle = do ->
         .find ({ selector }) -> 
           match selector, event
       if result?
-        result.handler.call self, event
+        result.handler.call self.self, event
     
     .define [ EventCoroutine, Promise ], ( self, promised ) ->
       event = await promised
