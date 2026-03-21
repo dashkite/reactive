@@ -1,7 +1,5 @@
 import { Queue } from "@dashkite/joy/iterable"
 
-# TODO this might belong in Reactive
-
 class Channel
 
   @close: Symbol "close"
