@@ -140,7 +140,13 @@ do ->
           assert ! match "foo, bar", event    
           assert ! match "!value", event
           assert match "!foo", event
-          assert ! match "foo, !value", event    
+          assert ! match "foo, !value", event   
+
+          event = 
+            name: "add-post" 
+            "the-answer": 42
+          assert match "add-post", event
+          assert match "add-post[the-answer='42']", event
 
       ]
 
