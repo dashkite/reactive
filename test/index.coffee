@@ -175,7 +175,31 @@ do ->
 
           result = ( x for await x from reactor )
           assert.deepEqual [ 1..5 ], result
+
       ]
+
+      test "error handling", ->
+
+        reactor = EventReactor.make do ->
+          yield name: "A"
+          throw new Error "oops"
+
+        log = []
+        caught = false
+        
+        # Test chaining and catching
+        reactor
+          .when "A", ( event ) -> log.push event.name
+          .catch ( error ) -> 
+            log.push error.message
+            caught = true
+
+        for await event from reactor
+          # iterate to trigger execution
+          continue
+
+        assert.deepEqual [ "A", "oops" ], log
+        assert caught
 
     ]
 
