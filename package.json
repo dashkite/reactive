@@ -47,7 +47,7 @@
     "@dashkite/genie-release": "^0.5.5"
   },
   "dependencies": {
-    "@dashkite/generic": "^0.9.21",
+    "@dashkite/generic": "^0.9.22",
     "@dashkite/joy": "^0.7.0",
     "@dashkite/parse": "^0.7.0"
   }
