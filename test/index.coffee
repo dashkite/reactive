@@ -113,7 +113,7 @@ do ->
 
       test "selector", [
 
-        test "match", ->
+        test "match", do ->
 
           event =
             name: "value"
@@ -121,33 +121,51 @@ do ->
             url: "https://dashkite.com"
             value: 42
 
-          assert match "*.value", event
-          assert match "component.value", event
-          assert ! match "controller.value", event
-          assert match "value", event
-          assert match "value[url]", event
-          assert ! match "value[foo]", event
-          assert match "*.value[url]", event
-          assert match "*.value[url='https://dashkite.com']", event
-          assert ! match "*.value[url='https://acme.org']", event
-          assert match '*.value[url="https://dashkite.com"]', event
-          assert match "component.value[url]", event
-          assert ! match "controller.value[url]", event
-          assert match "value[value='42']", event
-          assert match "*", event        
-          assert match "value, foo", event        
-          assert match "foo, value", event        
-          assert ! match "foo, bar", event    
-          assert ! match "!value", event
-          assert match "!foo", event
-          assert ! match "foo, !value", event   
+          [
+            test "wildcard scope", ->
+              assert match "*.value", event
+            test "scope and name", ->
+              assert match "component.value", event
+              assert ! match "controller.value", event
+            test "name only", ->
+              assert match "value", event
+            test "name and property existence", ->
+              assert match "value[url]", event
+              assert ! match "value[foo]", event
+            test "name and property non-existence", ->
+              assert match "value[!foo]", event
+              assert ! match "value[!url]", event
+            test "wildcard scope, name, property existence", ->
+              assert match "*.value[url]", event
+            test "wildcard scope, name, property value", ->
+              assert match "*.value[url='https://dashkite.com']", event
+              assert ! match "*.value[url='https://acme.org']", event
+              # double-quoted
+              assert match '*.value[url="https://dashkite.com"]', event
+            test "scope, name, property existence", ->
+              assert match "component.value[url]", event
+              assert ! match "controller.value[url]", event
+            test "name, property value", ->
+              assert match "value[value='42']", event
+            test "wildcard (scope and name)", ->
+              assert match "*", event     
+            test "selector list", ->
+              assert match "value, foo", event        
+              assert match "foo, value", event        
+              assert ! match "foo, bar", event    
+            test "negated name", ->
+              assert match "!foo", event
+              assert ! match "!value", event
+              assert ! match "foo, !value", event
+            test "hyphenated names", ->
+              do ({ event } = {}) ->
+                event = 
+                  name: "add-post" 
+                  "the-answer": 42
+                assert match "add-post", event
+                assert match "add-post[the-answer='42']", event
 
-          event = 
-            name: "add-post" 
-            "the-answer": 42
-          assert match "add-post", event
-          assert match "add-post[the-answer='42']", event
-
+          ]
       ]
 
       test "basic reactor", [

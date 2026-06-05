@@ -9,6 +9,11 @@ class Channel
       closed: false
       queue: Queue.make()
 
+  @merge: ( channels ) ->
+    merged = @make()
+    ( merged.source channel ) for channel in channels
+    merged
+
   source: ( channel ) ->
     ( @send message ) for await message from channel
       

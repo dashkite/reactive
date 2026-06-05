@@ -1,4 +1,4 @@
-import * as Fn from "@dashkite/joy/function"
+import { pipe, curry, memoize } from "@dashkite/joy/function"
 import * as Parse from "@dashkite/parse"
 
 ws = ( rule ) -> Parse.pipe [
@@ -12,9 +12,12 @@ ws = ( rule ) -> Parse.pipe [
 comma = ws Parse.text ","
 period = Parse.skip Parse.text "."
 asterisk = Parse.text "*"
+bang = Parse.text "!"
 lbracket = Parse.text "["
 rbracket = Parse.text "]"
 equals = Parse.text "="
+bar = Parse.text "|"
+ampersand = Parse.text "&"
 
 symbol = ws Parse.re /^[a-zA-Z][\w\-]*/
 
@@ -31,11 +34,6 @@ name = Parse.pipe [
 scope = Parse.pipe [
   symbol
   Parse.tag "scope"
-]
-
-property = Parse.pipe [
-  symbol
-  Parse.tag "property"
 ]
 
 wildcard = ( tag ) ->
@@ -81,18 +79,19 @@ nameSelector = Parse.any [
 
 propertyExpression = Parse.pipe [
   Parse.all [
-    property
-    Parse.optional Parse.all [
-      Parse.skip equals
-      quoted
+    Parse.optional Parse.pipe [ bang, Parse.map -> negate: true ]
+    name
+    Parse.optional Parse.pipe [
+      Parse.all [
+        Parse.skip equals
+        quoted
+      ]
+      Parse.map ([ value ]) -> { value }
     ]
-
   ]
-  Parse.map ([{ property }, relation ]) ->
-    if relation?
-      { property, value: relation[0] }
-    else
-      { property }
+  Parse.merge
+  Parse.map ( specifier ) ->
+    property: { negate: false, specifier... }
 ]
 
 propertySelector = Parse.between [ lbracket, rbracket ], propertyExpression
@@ -103,24 +102,22 @@ selector = Parse.pipe [
     Parse.optional propertySelector
   ]
   Parse.merge
-  Parse.map ({ rest..., name, scope }) ->
-    name ?= "*"
-    scope ?= "*"
-    { rest..., name, scope }
+  Parse.map ( specifier ) ->
+    { name: "*", scope: "*", specifier... }
 ]
 
 $not = Parse.pipe [
-  ws Parse.text "!"
+  ws bang
   Parse.map -> negate: true
 ]
 
 $or = Parse.pipe [
-  ws Parse.text "|"
+  ws bar
   Parse.map -> operator: "or"
 ]
 
 $and = Parse.pipe [
-  ws Parse.text "&"
+  ws ampersand
   Parse.map -> operator: "and"
 ]
 
@@ -139,9 +136,8 @@ unaryExpression = Parse.pipe [
     selector
   ]
   Parse.merge
-  Parse.map ({ rest..., negate }) ->
-    negate ?= false
-    { rest..., negate }
+  Parse.map ( specifier ) ->
+    { negate: false, specifier... }
 ]
 
 binaryExpression = Parse.pipe [
@@ -159,33 +155,50 @@ expression = Parse.any [
   unaryExpression
 ]
 
-parse = Fn.memoize Parse.parser Parse.list comma, expression
+parse = memoize Parse.parser Parse.list comma, expression
 
-evaluate = ( tree ) ->
-  if Array.isArray tree
-    ( event ) ->
-      tree.some ( expression ) ->
-        (( evaluate expression ) event )
-  else
-    if tree.operator
-      f = evaluate tree.first
-      g = evaluate tree.second
-      switch tree.operator
-        when "or"
-          ( event ) -> ( f event ) || ( g event )
-        when "and"
-          ( event ) -> ( f event ) && ( g event )
+# Predicate Helpers
+not_ = ( pred ) -> ( event ) -> ! pred event
+and_ = ( f, g ) -> ( event ) -> ( f event ) && ( g event )
+or_ = ( f, g ) -> ( event ) -> ( f event ) || ( g event )
+
+isMatch = ( scope, name ) ->
+  scope ?= "*"
+  name ?= "*"
+  ( event ) ->
+    (( scope == "*" ) || ( scope == event?.scope )) &&
+    (( name == "*") || ( name == event?.name ))
+
+hasProperty = ( property, value ) ->
+  ( event ) ->
+    exists = event[property]?
+    if value?
+      exists && event[property]?.toString() == value
     else
-      { scope, name, property, value, negate } = tree
-      do ( scope, name, property, value, negate ) ->
-        ( event ) ->
-          result = (( scope == "*" ) || ( scope == event.scope )) &&
-            (( name == "*") || ( name == event.name )) &&
-            (( !property? ) || event[ property ]? ) &&
-            (( !value? ) || ( event[ property ]?.toString() == value ))
-          if negate then !result else result
+      exists
 
-match = Fn.curry ( pattern, event ) ->
+Evaluators =
+
+  property: ({ name, value, negate }) ->
+    predicate = hasProperty name, value
+    if negate then not_ predicate else predicate
+
+  selector: ({ name, scope, property, negate }) ->
+    predicate = isMatch scope, name
+    if property?
+      predicate = and_ predicate, Evaluators.property property
+    if negate then not_ predicate else predicate
+
+  expression: ( expression ) ->
+    Evaluators.selector expression
+  
+  list: evaluate = ( selectors ) ->
+    ( event ) ->
+      selectors.some ( selector ) ->
+        Evaluators.selector selector
+          .call null, event
+
+match = curry ( pattern, event ) ->
   (( evaluate parse pattern ) event )
 
 export default match
