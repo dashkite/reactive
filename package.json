@@ -37,8 +37,7 @@
     "release": "genie release"
   },
   "devDependencies": {
-
-    "@dashkite/amen": "0.9.14",
+    "@dashkite/amen": "0.9.30",
     "@dashkite/amen-console": "0.4.0",
     "@dashkite/assert": "0.3.0",
     "@dashkite/genie": "0.20.14",
@@ -49,8 +48,7 @@
   },
   "dependencies": {
     "@dashkite/generic": "0.9.17",
-    "@dashkite/joy": "0.7.0",
+    "@dashkite/joy": "0.12.40",
     "@dashkite/parse": "0.7.0"
-
   }
 }
