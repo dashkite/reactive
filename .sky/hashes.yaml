@@ -1,7 +1,7 @@
-build/browser/src/topic.js: mRI5TUYa
-build/browser/src/index.js: t6gG9P3V
-build/browser/src/coroutine.js: Q7BiS6dr
+build/browser/src/channel.js: 5eYB0c5Z
 build/browser/src/event-coroutine.js: 1LJEKtbL
+build/browser/src/topic.js: mRI5TUYa
+build/browser/src/coroutine.js: Q7BiS6dr
+build/browser/src/index.js: t6gG9P3V
 build/browser/src/event-reactor.js: YcUBrP7D
 build/browser/src/event-selector.js: 4V8I7gRq
-build/browser/src/channel.js: YMq8Jz39
